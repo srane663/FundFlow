@@ -1,0 +1,123 @@
+openapi: 3.0.3
+info:
+  title: Expense Tracking API - User Management
+  description: >
+    API for managing users, including registration and login.
+  version: '1.0'
+servers:
+  - url: http://localhost:9000
+    description: Local development environment
+
+paths:
+  /users/register:
+    post:
+      operationId: registerUser
+      summary: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRegistration'
+            example:
+              email: "user@example.com"
+              password: "securePassword123"
+      responses:
+        201:
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        400:
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                missingField:
+                  value:
+                    errorCode: "400_BAD_REQUEST"
+                    message: "Required field is missing or invalid."
+
+  /users/login:
+    post:
+      operationId: loginUser
+      summary: Log in an existing user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserLogin'
+            example:
+              email: "user@example.com"
+              password: "securePassword123"
+      responses:
+        200:
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        401:
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalidCredentials:
+                  value:
+                    errorCode: "401_UNAUTHORIZED"
+                    message: "Invalid email or password."
+
+components:
+  schemas:
+    UserRegistration:
+      type: object
+      properties:
+        email:
+          type: string
+          example: "user@example.com"
+        password:
+          type: string
+          example: "securePassword123"
+
+    UserLogin:
+      type: object
+      properties:
+        email:
+          type: string
+          example: "user@example.com"
+        password:
+          type: string
+          example: "securePassword123"
+
+    AuthResponse:
+      type: object
+      properties:
+        token:
+          type: string
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"
+
+    UserResponse:
+      type: object
+      properties:
+        userId:
+          type: string
+          example: "user12345"
+        email:
+          type: string
+          example: "user@example.com"
+
+    ErrorResponse:
+      type: object
+      properties:
+        errorCode:
+          type: string
+          example: "404_NOT_FOUND"
+        message:
+          type: string
+          example: "The specified user does not exist."

@@ -1,0 +1,227 @@
+openapi: 3.0.3
+info:
+  title: Expense Tracking API - Budgeting and Goal Setting
+  description: >
+    This API allows authenticated users to manage their monthly or weekly budgets and financial goals. 
+    It supports creating, retrieving, and deleting budgets and goals. Each operation is tied to a specific user 
+    via their unique user ID, ensuring data is securely handled.
+  version: '1.0'
+servers:
+  - url: http://localhost:9000
+    description: Local development environment for testing the API.
+
+paths:
+  /users/{userId}/budgets:
+    post:
+      summary: Create a Budget
+      operationId: createBudget
+      description: >
+        Allows an authenticated user to create a budget for a specific category. 
+        The `userId` in the URL must match the authenticated user's ID provided in the token.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+            example: "12345"
+          description: The unique ID of the user creating the budget.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Budget'
+            example:
+              category: "Groceries"
+              frequency: "monthly"
+              limitAmount: 500.00
+              startDate: "2024-01-01"
+              endDate: "2024-12-31"
+      responses:
+        201:
+          description: Budget successfully created.
+          content:
+            application/json:
+              examples:
+                success:
+                  value:
+                    message: "Budget created successfully for the user."
+                    details: "Budget for 'Groceries' with a monthly limit of $500 has been created."
+        400:
+          description: Invalid request or missing required fields.
+          content:
+            application/json:
+              examples:
+                invalidFields:
+                  value:
+                    errorCode: "400_BAD_REQUEST"
+                    message: "Category and limitAmount are required fields."
+        403:
+          description: User is not authorized to create the budget.
+          content:
+            application/json:
+              examples:
+                unauthorized:
+                  value:
+                    errorCode: "403_FORBIDDEN"
+                    message: "You are not authorized to perform this action."
+        500:
+          description: Server error.
+          content:
+            application/json:
+              examples:
+                serverError:
+                  value:
+                    errorCode: "500_INTERNAL_SERVER_ERROR"
+                    message: "An unexpected error occurred. Please try again later."
+
+    get:
+      summary: Retrieve Budgets
+      operationId: getBudgets
+      description: >
+        Allows an authenticated user to retrieve all budgets associated with their account.
+        The `userId` in the URL must match the authenticated user's ID provided in the token.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+            example: "12345"
+          description: The unique ID of the user retrieving their budgets.
+      responses:
+        200:
+          description: Budgets retrieved successfully.
+          content:
+            application/json:
+              examples:
+                retrieveSuccess:
+                  value:
+                    message: "All budgets retrieved successfully for user ID 12345."
+                    budgets:
+                      - category: "Groceries"
+                        limitAmount: 500.00
+                        frequency: "monthly"
+                        startDate: "2024-01-01"
+                        endDate: "2024-12-31"
+        403:
+          description: User is not authorized to retrieve budgets.
+          content:
+            application/json:
+              examples:
+                unauthorized:
+                  value:
+                    errorCode: "403_FORBIDDEN"
+                    message: "You are not authorized to perform this action."
+        500:
+          description: Server error.
+          content:
+            application/json:
+              examples:
+                serverError:
+                  value:
+                    errorCode: "500_INTERNAL_SERVER_ERROR"
+                    message: "An unexpected error occurred. Please try again later."
+
+  /users/{userId}/budgets/{budgetId}:
+    delete:
+      summary: Delete a Budget
+      operationId: deleteBudget
+      description: >
+        Allows an authenticated user to delete an existing budget. 
+        The `userId` in the URL must match the authenticated user's ID provided in the token, 
+        and the `budgetId` must correspond to a valid budget belonging to the user.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+            example: "12345"
+          description: The unique ID of the user attempting to delete the budget.
+        - name: budgetId
+          in: path
+          required: true
+          schema:
+            type: string
+            example: "budget123"
+          description: The unique ID of the budget to be deleted.
+      responses:
+        204:
+          description: Budget successfully deleted.
+          content:
+            application/json:
+              examples:
+                deletionSuccess:
+                  value:
+                    message: "Budget with ID 'budget123' has been successfully deleted."
+        403:
+          description: User is not authorized to delete the budget.
+          content:
+            application/json:
+              examples:
+                unauthorized:
+                  value:
+                    errorCode: "403_FORBIDDEN"
+                    message: "You are not authorized to perform this action."
+        404:
+          description: Budget not found.
+          content:
+            application/json:
+              examples:
+                notFound:
+                  value:
+                    errorCode: "404_NOT_FOUND"
+                    message: "No budget found with the specified ID."
+        500:
+          description: Server error.
+          content:
+            application/json:
+              examples:
+                serverError:
+                  value:
+                    errorCode: "500_INTERNAL_SERVER_ERROR"
+                    message: "An unexpected error occurred. Please try again later."
+
+components:
+  schemas:
+    Budget:
+      type: object
+      required:
+        - category
+        - frequency
+        - limitAmount
+        - startDate
+      properties:
+        category:
+          type: string
+          example: "Groceries"
+        frequency:
+          type: string
+          enum: [weekly, monthly]
+          example: "monthly"
+        limitAmount:
+          type: number
+          format: double
+          example: 500.00
+        startDate:
+          type: string
+          format: date
+          example: "2024-01-01"
+        endDate:
+          type: string
+          format: date
+          example: "2024-12-31"
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

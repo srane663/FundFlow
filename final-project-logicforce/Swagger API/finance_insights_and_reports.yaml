@@ -1,0 +1,186 @@
+openapi: 3.0.3
+info:
+  title: Expense Tracking API - Financial Insights and Reports
+  description: API for generating monthly and yearly reports, as well as providing context menu options for managing entries and categories.
+  version: '1.0'
+servers:
+  - url: http://localhost:9000
+    description: Local development environment
+
+paths:
+  /users/{userId}/reports/monthly:
+    get:
+      operationId: getMonthlyReport
+      description: Generate a monthly report with visual insights on spending, income, and savings trends.
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+            example: "12345"
+        - name: month
+          in: query
+          required: true
+          schema:
+            type: string
+            example: "2023-05"
+            description: The month for which the report is generated, formatted as YYYY-MM.
+      responses:
+        200:
+          description: Monthly report generated successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinancialReport'
+        400:
+          description: Missing or invalid input.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                missingUserId:
+                  value:
+                    errorCode: "400_MISSING_USER_ID"
+                    message: "The userId parameter is required."
+                missingMonth:
+                  value:
+                    errorCode: "400_MISSING_MONTH"
+                    message: "The month query parameter is required."
+                invalidMonthFormat:
+                  value:
+                    errorCode: "400_INVALID_MONTH_FORMAT"
+                    message: "The month must be in YYYY-MM format."
+        409:
+          description: Resource conflict or missing data.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                conflict:
+                  value:
+                    errorCode: "409_RESOURCE_CONFLICT"
+                    message: "The requested data is unavailable due to a conflict or missing dependencies."
+
+  /users/{userId}/reports/yearly:
+    get:
+      operationId: getYearlyReport
+      description: Generate a yearly report with insights on spending, income, and savings trends.
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+            example: "12345"
+        - name: year
+          in: query
+          required: true
+          schema:
+            type: string
+            example: "2023"
+            description: The year for which the report is generated, formatted as YYYY.
+      responses:
+        200:
+          description: Yearly report generated successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinancialReport'
+        400:
+          description: Missing or invalid input.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                missingUserId:
+                  value:
+                    errorCode: "400_MISSING_USER_ID"
+                    message: "The userId parameter is required."
+                missingYear:
+                  value:
+                    errorCode: "400_MISSING_YEAR"
+                    message: "The year query parameter is required."
+                invalidYearFormat:
+                  value:
+                    errorCode: "400_INVALID_YEAR_FORMAT"
+                    message: "The year must be in YYYY format."
+        409:
+          description: Resource conflict or missing data.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                conflict:
+                  value:
+                    errorCode: "409_RESOURCE_CONFLICT"
+                    message: "The requested data is unavailable due to a conflict or missing dependencies."
+
+components:
+  schemas:
+    FinancialReport:
+      type: object
+      properties:
+        reportId:
+          type: string
+          example: "report123"
+        reportType:
+          type: string
+          example: "monthly"
+          description: Type of report, either 'monthly' or 'yearly'.
+        period:
+          type: string
+          example: "2023-05"
+          description: The period for which the report is generated (YYYY-MM for monthly, YYYY for yearly).
+        totalIncome:
+          type: number
+          format: double
+          example: 5000.00
+        totalExpenses:
+          type: number
+          format: double
+          example: 3200.00
+        totalSavings:
+          type: number
+          format: double
+          example: 1800.00
+        categoryBreakdown:
+          type: array
+          items:
+            $ref: '#/components/schemas/CategoryBreakdown'
+        visualCharts:
+          type: array
+          items:
+            type: string
+            example: ["bar", "pie", "line"]
+            description: List of chart types included in the report for visual insights.
+
+    CategoryBreakdown:
+      type: object
+      properties:
+        category:
+          type: string
+          example: "Groceries"
+        amountSpent:
+          type: number
+          format: double
+          example: 500.00
+        percentageOfTotal:
+          type: number
+          format: double
+          example: 15.6
+          description: Percentage of total expenses represented by this category.
+
+    ErrorResponse:
+      type: object
+      properties:
+        errorCode:
+          type: string
+          example: "400_BAD_REQUEST"
+        message:
+          type: string
+          example: "Invalid input or missing required fields."
